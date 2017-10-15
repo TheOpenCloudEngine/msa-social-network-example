@@ -1,3 +1,6 @@
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script src="https://unpkg.com/hybind@latest/index.js"></script>
+
 <script src="https://unpkg.com/vue"></script>
 
 <script src="https://unpkg.com/vue"></script>
@@ -6,211 +9,144 @@
 <link rel="stylesheet" href="https://unpkg.com/vue-material@0.7.1/dist/vue-material.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-<script type="text/x-template" id="sns-new-post-template">
 
-    <div>
-
-
-        <md-tabs>
-            <md-tab id="micro-blog" md-label="Text">
-                <form novalidate @submit.stop.prevent="submit">
-                    <md-input-container>
-                        <label>What will you do now ?</label>
-                        <md-input v-model="content"></md-input>
-                    </md-input-container>
-                </form>
-
-            </md-tab>
-            <md-tab id="file" md-label="File">
-                <form novalidate @submit.stop.prevent="submit">
-                    <md-input-container>
-                        <label>Choose file</label>
-                        <md-file v-model="fileContent"></md-file>
-                    </md-input-container>
-                </form>
-
-            </md-tab>
-            <md-tab id="poll" md-label="Poll">
-                <form novalidate @submit.stop.prevent="submit">
-                    <md-input-container v-for="(option, index) in options">
-                        <label>Option {{index+1}}</label>
-                        <md-input v-model="option"></md-input>
-                    </md-input-container>
-
-                    <md-button @click.native="addOption">+</md-button>
-                </form>
-
-            </md-tab>
-        </md-tabs>
-
-        <md-button @click.native="post">Post</md-button>
-
-    </div>
-
-</script>
-
-
-<script type="text/x-template" id="sns-file-post-template">
+<script type="text/x-template" id="crm-ticket-template">
 
 
     <md-card>
-        <md-card-media v-if="previewUrl">
-            <img :src="previewUrl" alt="People">
-        </md-card-media>
-        <md-spinner :md-size="150" md-indeterminate v-else></md-spinner>
-
 
         <md-card-header>
-            <md-avatar class="md-large">
-                <img src="https://avatars1.githubusercontent.com/u/487999?s=460&v=4" alt="People">
-            </md-avatar>
 
-            <div class="md-title"> {{title}} </div>
-            <div class="md-subhead"> {{content.substring(100)}} </div>
+            <div v-if="editMode" class="md-title">
+                <form novalidate @submit.stop.prevent="submit">
+                    <md-input-container>
+                        <label>title</label>
+                        <md-input v-model="data.title"></md-input>
+                    </md-input-container>
+                </form>
+            </div>
+            <div v-else class="md-title">
+                {{data.title}}
+            </div>
+
+            <div class="md-subhead">
+                raised by
+                <crm-customer :data="data.raiser" v-if="data.raiser.name"></crm-customer>
+                <md-spinner :md-size="150" md-indeterminate v-else></md-spinner>
+            </div>
+
+
         </md-card-header>
 
         <md-card-actions>
-            <md-button @click.native="like">Like</md-button>
-            <md-button @click.native="share">Share</md-button>
+            <md-button @click.native="$refs['new-support'].open()">Support</md-button>
+
+            <md-dialog md-open-from="#custom" md-close-to="#custom" ref="new-support">
+                <md-dialog-title>Add Support</md-dialog-title>
+
+                <form novalidate @submit.stop.prevent="submit">
+                    <md-input-container>
+                        <label>content</label>
+                        <md-input v-model="support"></md-input>
+                    </md-input-container>
+                </form>
+
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click.native="$refs['new-support'].close()">Cancel</md-button>
+                    <md-button class="md-primary" @click.native="addSupport">Add</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-button v-if="editMode" @click.native="save">Save</md-button>
+            <md-button v-else @click.native="edit">Edit</md-button>
         </md-card-actions>
 
         <md-card-content>
-            {{content}}
+            {{data.content}}
+
+            <h3>Support History</h3>
+            <md-table v-if="data.supports">
+                <md-table-header>
+                    <md-table-row>
+                        <md-table-head>Date</md-table-head>
+                        <md-table-head>Content</md-table-head>
+                        <md-table-head>Assignee</md-table-head>
+                    </md-table-row>
+                </md-table-header>
+
+                <md-table-body>
+                    <md-table-row v-for="support in data.supports" :key="index">
+                        <md-table-cell>{{support.supportDate}}</md-table-cell>
+                        <md-table-cell>{{support.content}}</md-table-cell>
+                        <md-table-cell>{{support.assignee}}</md-table-cell>
+                    </md-table-row>
+                </md-table-body>
+            </md-table>
+
         </md-card-content>
     </md-card>
 
 </script>
 
 
-<script type="text/x-template" id="sns-poll-post-template">
-
-    <md-card>
-        <md-card-header>
-            <md-avatar class="md-large">
-                <img src="https://avatars2.githubusercontent.com/u/13447690?s=64&v=4" alt="People">
-            </md-avatar>
-
-            <div class="md-title"> {{title}}</div>
-            <div class="md-subhead"> {{ content }} </div>
-        </md-card-header>
-
-        <md-card-actions>
-            <md-button>Like</md-button>
-            <md-button>Share</md-button>
-        </md-card-actions>
-
-        <md-card-content>
-            <md-check v-for="option in options">{{option}}</md-check>
-        </md-card-content>
-    </md-card>
+<script type="text/x-template" id="crm-customer-template">
+    <div>{{data.name}}</div>
 </script>
 
 <script>
 
     Vue.use(VueMaterial)
 
-    Vue.component('sns-new-post', {
-        template: "#sns-new-post-template",
+    Vue.component('crm-ticket', {
+        template: "#crm-ticket-template",
         props: {
-            microBlogContent: String,
-            fileContent: Object,
-            options: Array,
-            option: String
+            data: Object,
+            editMode: Boolean
         },
         data:{
-
+            support: ""
         },
         methods: {
 
-            addOption: function(){
-                this.options.push('Option')
+            respond: function(){
+                alert('respond')
             },
-
-            post: function(){
-                var xhr = new XMLHttpRequest()
-
-                var self = this
-                xhr.open('POST', "http://localhost:8080/posting");
-                xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-
-                xhr.onload = function () {
-                    //refresh.
-                }
-                xhr.send()
-
+            save: function () {
+                var me = this;
+                this.data.$save().then(function(){
+                    me.editMode = false;
+                })
+            },
+            edit: function (){
+                this.editMode = true;
+            },
+            addSupport: function(){
+                this.data.supports.$create(
+                    {content: this.support}
+                );
             }
         }
-
     });
 
-    Vue.component('sns-file-post', {
-        template: "#sns-file-post-template",
+    Vue.component('crm-customer', {
+        template: "#crm-customer-template",
         props: {
-            previewUrl: String,
-            title: String,
-            content: String,
+            data: Object
         },
         data:{
 
-        },
-        methods: {
-
-            like: function(){
-                alert('liked')
-            },
-            share: function () {
-                alert('share!')
-            }
         }
-
-    });
-
-    Vue.component('sns-poll-post', {
-        template: "#sns-poll-post-template",
-        props: {
-            title: String,
-            content: String,
-            options: Array
-        },
-        data:{
-
-        },
-        methods: {
-
-            like: function(){
-                alert('liked')
-            },
-            share: function () {
-                alert('share!')
-            }
-        }
-
     });
 
 </script>
 
+<script>
 
+
+</script>
 
 <div id="app">
-
-    <md-avatar class="md-avatar-icon">
-        <img src="https://avatars1.githubusercontent.com/u/487999?s=460&v=4" alt="People">
-    </md-avatar>
-
-    <sns-new-post :file-content="{}" micro-blog-content="" :options="['Option']"></sns-new-post>
-
-
-    <md-spinner :md-size="150" md-indeterminate v-if="posts==null"></md-spinner>
-
-    <component v-if="posts!=null" v-for="post in posts" :is="'sns-' + post.type + '-post'"
-               :title="post.title"
-               :content="post.content"
-               :options="post.options"
-               :preview-url = "post.previewUrl"
-
-    ></component>
-
-
+    <crm-ticket v-for="ticket in tickets" :data="ticket"></crm-ticket>
 </div>
 
 
@@ -219,41 +155,31 @@
     var app = new Vue({
         el: '#app',
         data:{
-            posts: null
+            tickets: [
+//                {title: 'problem1', content: 'problem1', raiser:{name:'tester'}},
+//                {title: 'problem2', content: 'problem2', raiser:{name:'tester'}}
+            ]
         },
 
         created: function () {
-            var xhr = new XMLHttpRequest()
 
-            var self = this
-            xhr.open('GET', "http://localhost:8080/posting");
-            xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+            var backend = hybind("http://localhost:8080");
+            var tickets = []; //TODO looks dummy
+            var me = this;
+            backend.$bind("ticket", tickets);
+            tickets.$load().then(function(tickets){
+                me.tickets = tickets;  //TODO looks dummy
 
-            xhr.onload = function () {
-                self.posts = JSON.parse(xhr.responseText)._embedded.postings;
-
-                self.posts.each(function(post){
-                   var detailUrl = post.detailUrl;
-
-                    var xhr = new XMLHttpRequest()
-
-                    var self = this
-                    xhr.open('GET', detailUrl);
-                    xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-
-                    xhr.onload = function () {
-
-                        var details = JSON.parse(xhr.responseText);
-
-                        self.previewUrl = details.previewUrl;
-                    }
+                tickets.forEach(function(ticket){
+                   ticket.raiser.$load().then(
+                       function(raiser){ //TODO looks dummy
+                           ticket.raiser = null; //TODO looks dummy
+                           ticket.raiser = raiser; //TODO looks dummy
+                       });
                 });
-            }
-            xhr.send()
+            });
+
+
         }
     })
-
-
-
-
 </script>

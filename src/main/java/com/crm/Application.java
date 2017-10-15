@@ -1,4 +1,4 @@
-package com.social;
+package com.crm;
 
 import org.metaworks.springboot.configuration.Metaworks4BaseApplication;
 import org.springframework.beans.factory.ObjectProvider;
