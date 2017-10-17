@@ -35,6 +35,7 @@ public class Ticket implements BeforeSave{
     Customer raiser;
 
     @OneToMany
+    @JoinColumn(name = "ticketId")
     List<Support> supports;
 
     public Long getId() {

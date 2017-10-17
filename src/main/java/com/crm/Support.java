@@ -3,10 +3,7 @@ package com.crm;
 import org.eclipse.persistence.annotations.Multitenant;
 import org.eclipse.persistence.annotations.TenantDiscriminatorColumn;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -29,8 +26,9 @@ public class Support {
 
     String assignee;
 
-    @ManyToOne
-    Ticket ticket;
+//    @ManyToOne(fetch = FetchType.EAGER)
+//    @JoinColumn(name="ticketId")
+//    Ticket ticket;
 
     public Long getId() {
         return id;
@@ -56,13 +54,13 @@ public class Support {
         this.content = content;
     }
 
-    public Ticket getTicket() {
-        return ticket;
-    }
-
-    public void setTicket(Ticket ticket) {
-        this.ticket = ticket;
-    }
+//    public Ticket getTicket() {
+//        return ticket;
+//    }
+//
+//    public void setTicket(Ticket ticket) {
+//        this.ticket = ticket;
+//    }
 
     public String getAssignee() {
         return assignee;
